@@ -3,166 +3,193 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Beehive History</title>
+  <title>Beehive Monitor</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
       margin: 0;
-      padding: 20px;
-      background-color: #f4f7fc;
+      font-family: 'Poppins', sans-serif;
+      background: #f9fbff;
       color: #333;
+      padding: 20px;
     }
 
     .header {
-      background-color: #2d3e50;
-      color: white;
-      padding: 20px;
       text-align: center;
-      font-size: 24px;
+      background: #2d3e50;
+      color: white;
+      padding: 15px;
+      font-size: 22px;
+      border-radius: 8px;
       margin-bottom: 20px;
     }
 
     .chart-container {
       width: 100%;
       overflow-x: auto;
-      padding-bottom: 20px;
-    }
-
-    .chart-box {
-      min-width: 1200px;
     }
 
     canvas {
-      width: 100%;
-      height: auto;
+      width: 100% !important;
+      height: auto !important;
+      min-width: 600px;
     }
 
-    .nav {
+    .buttons {
       display: flex;
       justify-content: center;
-      margin-top: 30px;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
     }
 
-    .card-tile {
-      display: inline-block;
-      background-color: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
-      padding: 10px 25px;
-      font-size: 20px;
+    .buttons button {
+      background: #fff;
+      border: 1px solid #2d3e50;
+      padding: 8px 16px;
+      border-radius: 10px;
       font-weight: 600;
-      color: #2d3e50;
-      text-decoration: none;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      transition: 0.2s ease;
     }
 
-    .card-tile:hover {
-      transform: scale(1.05);
-      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+    .buttons button:hover {
+      background: #2d3e50;
+      color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      canvas {
+        height: 400px !important;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="header">📈 Temperature & Humidity</div>
 
-  <div class="chart-container">
-    <div class="chart-box">
-      <canvas id="chart"></canvas>
-    </div>
-  </div>
+<div class="header">📊 Beehive Temperature & Humidity Monitor</div>
 
-  <div class="nav">
-    <a href="index.html" class="card-tile">🔙 Back to Live</a>
-  </div>
+<div class="buttons">
+  <button onclick="loadData('live')">Live</button>
+  <button onclick="loadData('24h')">24H</button>
+  <button onclick="loadData('7d')">7D</button>
+  <button onclick="loadData('15d')">15D</button>
+  <button onclick="loadData('30d')">30D</button>
+</div>
 
-  <script>
-    var firebaseConfig = {
-      apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
-      authDomain: "beehive-d31e3.firebaseapp.com",
-      databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "beehive-d31e3",
-      storageBucket: "beehive-d31e3.appspot.com",
-      messagingSenderId: "replace",
-      appId: "replace"
-    };
+<div class="chart-container">
+  <canvas id="chart"></canvas>
+</div>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
+    authDomain: "beehive-d31e3.firebaseapp.com",
+    databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "beehive-d31e3",
+    storageBucket: "beehive-d31e3.appspot.com",
+    messagingSenderId: "replace",
+    appId: "replace"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
+  let chart;
+
+  function createChart(labels, tempData, humData) {
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('chart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '🌡 Temp (°C)',
+            data: tempData,
+            borderColor: '#ff5733',
+            backgroundColor: 'rgba(255,87,51,0.1)',
+            fill: false,
+            tension: 0.3
+          },
+          {
+            label: '💧 Humidity (%)',
+            data: humData,
+            borderColor: '#3399ff',
+            backgroundColor: 'rgba(51,153,255,0.1)',
+            fill: false,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            ticks: {
+              autoSkip: false,
+              maxRotation: 0,
+              callback: function(value, index, ticks) {
+                // Show only every 6th label (30 min grid, assuming 5 min data points)
+                return index % 6 === 0 ? this.getLabelForValue(value) : '';
+              }
+            },
+            grid: {
+              color: (ctx) => {
+                const label = chart.data.labels[ctx.tick.value];
+                return label && (label.endsWith(":00") || label.endsWith(":30")) ? "#ccc" : "transparent";
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#eee' }
+          }
+        },
+        plugins: {
+          legend: { position: 'top' }
+        }
+      }
+    });
+  }
+
+  function loadData(range) {
     db.ref("history").once("value").then(snapshot => {
-      const data = snapshot.val() || {};
-
+      const allData = snapshot.val() || {};
       const labels = [];
       const temps = [];
       const hums = [];
 
-      Object.keys(data).sort().forEach(time => {
-        labels.push(time.slice(11)); // HH:MM
-        temps.push(data[time].temperature);
-        hums.push(data[time].humidity);
-      });
+      const now = new Date();
+      let startTime = new Date();
 
-      new Chart(document.getElementById("chart"), {
-        type: "line",
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: "🌡️ Temp (°C)",
-              data: temps,
-              borderColor: "#ff5733",
-              backgroundColor: "rgba(255, 87, 51, 0.2)",
-              fill: false,
-              tension: 0.2
-              
-            },
-            {
-              label: "💧 Humidity (%)",
-              data: hums,
-              borderColor: "#3399ff",
-              backgroundColor: "rgba(51, 153, 255, 0.2)",
-              fill: false,
-              tension: 0.2
-              
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: "top" },
-            title: {
-              display: true,
-              text: "Beehive Temperature & Humidity History"
-            }
-          },
-          scales: {
-            x: {
-              type: 'category',
-              title: {
-                display: true,
-                text: 'Time (HH:MM)'
-              },
-              ticks: {
-                maxRotation: 90,
-                minRotation: 45
-              }
-            },
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Value'
-              }
-            }
-          }
+      switch(range) {
+        case 'live': startTime.setMinutes(now.getMinutes() - 30); break;
+        case '24h': startTime.setHours(now.getHours() - 24); break;
+        case '7d': startTime.setDate(now.getDate() - 7); break;
+        case '15d': startTime.setDate(now.getDate() - 15); break;
+        case '30d': startTime.setDate(now.getDate() - 30); break;
+      }
+
+      Object.keys(allData).sort().forEach(key => {
+        const entryDate = new Date(key);
+        if (entryDate >= startTime) {
+          const timeStr = entryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          labels.push(timeStr);
+          temps.push(allData[key].temperature);
+          hums.push(allData[key].humidity);
         }
       });
+
+      createChart(labels, temps, hums);
     });
-  </script>
+  }
+
+  // Default view
+  loadData('live');
+</script>
 </body>
 </html>
