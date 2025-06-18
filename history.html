@@ -60,6 +60,31 @@
       color: #fff;
     }
 
+    .nav {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .card-tile {
+      display: inline-block;
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+      padding: 10px 25px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #2d3e50;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .card-tile:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+    }
+
     @media (max-width: 600px) {
       canvas {
         height: 400px !important;
@@ -83,8 +108,12 @@
   <canvas id="chart"></canvas>
 </div>
 
+<!-- Back to Home Button -->
+<div class="nav">
+  <a href="index.html" class="card-tile">Back to Home</a>
+</div>
+
 <script>
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
     authDomain: "beehive-d31e3.firebaseapp.com",
@@ -112,7 +141,7 @@
             data: tempData,
             borderColor: '#ff5733',
             backgroundColor: 'rgba(255,87,51,0.1)',
-            fill: false,
+            fill: true,
             tension: 0.3
           },
           {
@@ -120,7 +149,7 @@
             data: humData,
             borderColor: '#3399ff',
             backgroundColor: 'rgba(51,153,255,0.1)',
-            fill: false,
+            fill: true,
             tension: 0.3
           }
         ]
@@ -133,7 +162,6 @@
               autoSkip: false,
               maxRotation: 0,
               callback: function(value, index, ticks) {
-                // Show only every 6th label (30 min grid, assuming 5 min data points)
                 return index % 6 === 0 ? this.getLabelForValue(value) : '';
               }
             },
