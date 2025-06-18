@@ -42,12 +42,33 @@
   </style>
 </head>
 <body>
-  <div class="header">📈 Beehive History Chart</div>
+  <div class="header">📈 Temperature & Humidity</div>
   <canvas id="chart"></canvas>
 
-  <div class="nav">
-    <a href="index.html">🔙 Back to Live</a>
-  </div>
+ <!-- Replace your .nav section with this -->
+<div class="nav">
+  <a href="index.html" class="btn-tile">🔙 Back to Live</a>
+</div>
+
+<style>
+  .btn-tile {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #2d3e50;
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+
+  .btn-tile:hover {
+    background-color: #1b2836;
+    transform: scale(1.05);
+  }
+</style>
+
 
   <script>
     var firebaseConfig = {
