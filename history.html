@@ -28,10 +28,16 @@
     .chart-container {
       width: 100%;
       overflow-x: auto;
+      padding-bottom: 20px;
+    }
+
+    .chart-box {
+      min-width: 1200px;
     }
 
     canvas {
-      min-width: 600px;
+      width: 100%;
+      height: auto;
     }
 
     .nav {
@@ -63,7 +69,9 @@
   <div class="header">📈 Temperature & Humidity</div>
 
   <div class="chart-container">
-    <canvas id="chart"></canvas>
+    <div class="chart-box">
+      <canvas id="chart"></canvas>
+    </div>
   </div>
 
   <div class="nav">
@@ -106,31 +114,50 @@
               label: "🌡️ Temp (°C)",
               data: temps,
               borderColor: "#ff5733",
+              backgroundColor: "rgba(255, 87, 51, 0.2)",
               fill: false,
               tension: 0.2
+              
             },
             {
               label: "💧 Humidity (%)",
               data: hums,
               borderColor: "#3399ff",
+              backgroundColor: "rgba(51, 153, 255, 0.2)",
               fill: false,
               tension: 0.2
+              
             }
           ]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
-            legend: { position: "top" }
+            legend: { position: "top" },
+            title: {
+              display: true,
+              text: "Beehive Temperature & Humidity History"
+            }
           },
           scales: {
             x: {
-              display: true,
-              title: { display: true, text: "Time" }
+              type: 'category',
+              title: {
+                display: true,
+                text: 'Time (HH:MM)'
+              },
+              ticks: {
+                maxRotation: 90,
+                minRotation: 45
+              }
             },
             y: {
               beginAtZero: true,
-              title: { display: true, text: "Value" }
+              title: {
+                display: true,
+                text: 'Value'
+              }
             }
           }
         }
