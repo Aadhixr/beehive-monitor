@@ -45,29 +45,38 @@
   <div class="header">📈 Temperature & Humidity</div>
   <canvas id="chart"></canvas>
 
- <!-- Replace your .nav section with this -->
-<div class="nav">
-  <a href="index.html" class="btn-tile">🔙 Back to Live</a>
+ <div class="nav">
+  <a href="index.html" class="card-tile">
+    🔙 Back to Live
+  </a>
 </div>
 
 <style>
-  .btn-tile {
-    display: inline-block;
-    padding: 12px 24px;
-    background-color: #2d3e50;
-    color: white;
-    border-radius: 12px;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    text-decoration: none;
-    transition: background-color 0.3s, transform 0.2s;
+  .nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
   }
 
-  .btn-tile:hover {
-    background-color: #1b2836;
+  .card-tile {
+    display: inline-block;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+    padding: 8px 27px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #2d3e50;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card-tile:hover {
     transform: scale(1.05);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
   }
 </style>
+
 
 
   <script>
