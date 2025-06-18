@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Beehive Monitor</title>
+  <title>Beehive Monitor - Live</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
   <style>
     body {
@@ -23,10 +23,10 @@
 
     .container {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
       gap: 20px;
       padding: 30px;
+      flex-wrap: wrap;
     }
 
     .card {
@@ -58,15 +58,24 @@
       font-size: 24px;
       color: #2d3e50;
     }
+
+    .nav {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: #2d3e50;
+      font-weight: bold;
+    }
   </style>
 
-  <!-- Firebase SDK v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
-
 <body>
-  <div class="header">🐝 Beehive Monitor</div>
+  <div class="header">🐝 Beehive Monitor - Live</div>
 
   <div class="container">
     <div class="card">
@@ -82,30 +91,28 @@
     </div>
   </div>
 
+  <div class="nav">
+    <a href="history.html">📈 View History Chart</a>
+  </div>
+
   <script>
-    // Your Firebase config
     var firebaseConfig = {
       apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
       authDomain: "beehive-d31e3.firebaseapp.com",
       databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "beehive-d31e3",
       storageBucket: "beehive-d31e3.appspot.com",
-      messagingSenderId: "replace_with_sender_id",
-      appId: "replace_with_app_id"
+      messagingSenderId: "replace",
+      appId: "replace"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     var db = firebase.database();
 
-    // Live listener
     db.ref("beehive").on("value", function(snapshot) {
       const data = snapshot.val() || {};
-
       document.getElementById("temp").innerText = data.temperature ?? "--";
       document.getElementById("hum").innerText = data.humidity ?? "--";
-    }, function(error) {
-      console.error("❌ Firebase error:", error);
     });
   </script>
 </body>
