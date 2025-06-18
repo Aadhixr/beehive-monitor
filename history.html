@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Beehive History</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f7fc;
+      color: #333;
+    }
+
+    .header {
+      background-color: #2d3e50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+
+    .nav {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: #2d3e50;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">📈 Beehive History Chart</div>
+  <canvas id="chart"></canvas>
+
+  <div class="nav">
+    <a href="index.html">🔙 Back to Live</a>
+  </div>
+
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
+      authDomain: "beehive-d31e3.firebaseapp.com",
+      databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "beehive-d31e3",
+      storageBucket: "beehive-d31e3.appspot.com",
+      messagingSenderId: "replace",
+      appId: "replace"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    db.ref("history").once("value").then(snapshot => {
+      const data = snapshot.val() || {};
+
+      const labels = [];
+      const temps = [];
+      const hums = [];
+
+      Object.keys(data).sort().forEach(time => {
+        labels.push(time.slice(11)); // show only HH:MM
+        temps.push(data[time].temperature);
+        hums.push(data[time].humidity);
+      });
+
+      new Chart(document.getElementById("chart"), {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Temperature (°C)",
+              data: temps,
+              borderColor: "#ff5733",
+              backgroundColor: "rgba(255,87,51,0.2)",
+              fill: true,
+              tension: 0.4
+            },
+            {
+              label: "Humidity (%)",
+              data: hums,
+              borderColor: "#3399ff",
+              backgroundColor: "rgba(51,153,255,0.2)",
+              fill: true,
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "top" },
+            title: { display: true, text: "Beehive Temperature & Humidity History" }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
