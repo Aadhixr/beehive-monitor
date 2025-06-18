@@ -25,59 +25,50 @@
       margin-bottom: 20px;
     }
 
+    .chart-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
     canvas {
-      max-width: 100%;
+      min-width: 600px;
     }
 
     .nav {
-      text-align: center;
-      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
     }
 
-    .nav a {
-      text-decoration: none;
+    .card-tile {
+      display: inline-block;
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+      padding: 10px 25px;
+      font-size: 20px;
+      font-weight: 600;
       color: #2d3e50;
-      font-weight: bold;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-tile:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
     }
   </style>
 </head>
 <body>
   <div class="header">📈 Temperature & Humidity</div>
-  <canvas id="chart"></canvas>
 
- <div class="nav">
-  <a href="index.html" class="card-tile">
-    🔙 Back to Live
-  </a>
-</div>
+  <div class="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
 
-<style>
-  .nav {
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-  }
-
-  .card-tile {
-    display: inline-block;
-    background-color: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
-    padding: 5px 20px;
-    font-size: 20px;
-    font-weight: 600;
-    color: #2d3e50;
-    text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .card-tile:hover {
-    transform: scale(1.05);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
-  }
-</style>
-
-
+  <div class="nav">
+    <a href="index.html" class="card-tile">🔙 Back to Live</a>
+  </div>
 
   <script>
     var firebaseConfig = {
@@ -101,7 +92,7 @@
       const hums = [];
 
       Object.keys(data).sort().forEach(time => {
-        labels.push(time.slice(11)); // show only HH:MM
+        labels.push(time.slice(11)); // HH:MM
         temps.push(data[time].temperature);
         hums.push(data[time].humidity);
       });
@@ -112,33 +103,34 @@
           labels: labels,
           datasets: [
             {
-              label: "Temperature (°C)",
+              label: "🌡️ Temp (°C)",
               data: temps,
               borderColor: "#ff5733",
-              backgroundColor: "rgba(255,87,51,0.2)",
-              fill: true,
-              tension: 0.4
+              fill: false,
+              tension: 0.3
             },
             {
-              label: "Humidity (%)",
+              label: "💧 Humidity (%)",
               data: hums,
               borderColor: "#3399ff",
-              backgroundColor: "rgba(51,153,255,0.2)",
-              fill: true,
-              tension: 0.4
+              fill: false,
+              tension: 0.3
             }
           ]
         },
         options: {
           responsive: true,
           plugins: {
-            legend: { position: "top" },
-            title: { display: true, text: "Beehive Temperature & Humidity History" }
+            legend: { position: "top" }
           },
           scales: {
+            x: {
+              display: true,
+              title: { display: true, text: "Time" }
+            },
             y: {
               beginAtZero: true,
-              max: 100
+              title: { display: true, text: "Value" }
             }
           }
         }
