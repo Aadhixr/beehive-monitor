@@ -60,7 +60,7 @@
     }
   </style>
 
-  <!-- Firebase scripts -->
+  <!-- Firebase SDK v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
@@ -70,7 +70,7 @@
 
   <div class="container">
     <div class="card">
-      <div class="emoji">🌡</div>
+      <div class="emoji">🌡️</div>
       <div class="label">Temperature</div>
       <div class="value"><span id="temp">--</span> °C</div>
     </div>
@@ -80,60 +80,32 @@
       <div class="label">Humidity</div>
       <div class="value"><span id="hum">--</span> %</div>
     </div>
-
-    <div class="card">
-      <div class="emoji">🧠</div>
-      <div class="label">Motion</div>
-      <div class="value"><span id="motion">--</span></div>
-    </div>
-
-    <div class="card">
-      <div class="emoji">🌫</div>
-      <div class="label">Air Quality</div>
-      <div class="value"><span id="air">--</span> ppm</div>
-    </div>
   </div>
 
   <script>
-    // ✅ YOUR Firebase configuration
+    // Your Firebase config
     var firebaseConfig = {
       apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
       authDomain: "beehive-d31e3.firebaseapp.com",
       databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "beehive-d31e3",
       storageBucket: "beehive-d31e3.appspot.com",
-      messagingSenderId: "replace_with_sender_id_if_needed",
-      appId: "replace_with_app_id_if_needed"
+      messagingSenderId: "replace_with_sender_id",
+      appId: "replace_with_app_id"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     var db = firebase.database();
 
-    // Live update from Firebase
-    db.ref('beehive').on('value', function(snapshot) {
+    // Live listener
+    db.ref("beehive").on("value", function(snapshot) {
       const data = snapshot.val() || {};
 
-      // Elements
-      const tempEl = document.getElementById('temp');
-      const humEl = document.getElementById('hum');
-      const motionEl = document.getElementById('motion');
-      const airEl = document.getElementById('air');
-
-      // Temperature
-      tempEl.innerText = data.temperature ?? "--";
-      if (data.temperature > 35) tempEl.style.color = "red";
-      else if (data.temperature < 28) tempEl.style.color = "blue";
-      else tempEl.style.color = "#2d3e50";
-
-      // Humidity
-      humEl.innerText = data.humidity ?? "--";
-      humEl.style.color = data.humidity < 50 ? "orange" : "#2d3e50";
-
-      // Motion
-      motionEl.innerText = data.motion ? "Detected" : "None";
-
-      // Air Quality
-      airEl.innerText = data.air_quality ?? "--";
+      document.getElementById("temp").innerText = data.temperature ?? "--";
+      document.getElementById("hum").innerText = data.humidity ?? "--";
+    }, function(error) {
+      console.error("❌ Firebase error:", error);
     });
   </script>
 </body>
