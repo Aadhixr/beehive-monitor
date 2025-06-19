@@ -4,21 +4,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Beehive Monitor - Live</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+
   <style>
+    :root {
+      --bg: #f9fbff;
+      --fg: #333;
+      --card: #fff;
+      --buttonBg: #2d3e50;
+      --buttonFg: #fff;
+    }
+    .dark {
+      --bg: #2b2e3b;
+      --fg: #ddd;
+      --card: #3a3f4b;
+      --buttonBg: #ddd;
+      --buttonFg: #2d3e50;
+    }
+
     body {
-      font-family: 'Poppins', sans-serif;
       margin: 0;
-      background-color: #f4f7fc;
-      color: #333;
+      font-family: 'Times New Roman', Times, serif;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--fg);
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .header {
-      background-color: #2d3e50;
-      color: white;
+      background-color: var(--buttonBg);
+      color: var(--buttonFg);
       padding: 20px;
       text-align: center;
       font-size: 24px;
+      border-radius: 8px;
     }
 
     .container {
@@ -30,7 +48,7 @@
     }
 
     .card {
-      background-color: white;
+      background-color: var(--card);
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       padding: 20px;
@@ -56,18 +74,45 @@
 
     .value {
       font-size: 24px;
-      color: #2d3e50;
+      color: var(--fg);
     }
 
     .nav {
-      text-align: center;
-      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
     }
 
-    .nav a {
+    .card-tile {
+      display: inline-block;
+      background-color: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
+      padding: 10px 25px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--buttonBg);
       text-decoration: none;
-      color: #2d3e50;
-      font-weight: bold;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card-tile:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--buttonBg);
+      color: var(--buttonFg);
+      border: none;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-family: 'Times New Roman', Times, serif;
     }
   </style>
 
@@ -95,41 +140,23 @@
     <a href="history.html" class="card-tile">📈 View History Chart</a>
   </div>
 
-<style>
-  .nav {
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-  }
-
-  .card-tile {
-    display: inline-block;
-    background-color: white;
-    border-radius: 16px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
-    padding: 5px 20px;
-    font-size: 20px;
-    font-weight: 600;
-    color: #2d3e50;
-    text-decoration: none;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .card-tile:hover {
-    transform: scale(1.05);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
-  }
-</style>
+  <button class="toggle" onclick="toggleDark()">🌙</button>
 
   <script>
+    // Theme toggle logic
+    if (localStorage.dark === 'true') document.body.classList.add('dark');
+    function toggleDark() {
+      document.body.classList.toggle('dark');
+      localStorage.dark = document.body.classList.contains('dark');
+    }
+
+    // Firebase connection
     var firebaseConfig = {
       apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
       authDomain: "beehive-d31e3.firebaseapp.com",
       databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "beehive-d31e3",
-      storageBucket: "beehive-d31e3.appspot.com"
     };
-
     firebase.initializeApp(firebaseConfig);
     var db = firebase.database();
 
