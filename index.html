@@ -115,7 +115,6 @@
       border-radius: 50%;
       cursor: pointer;
       font-size: 18px;
-      font-family: 'Times New Roman', Times, serif;
     }
 
     .pulse {
@@ -123,9 +122,24 @@
     }
 
     @keyframes pulseBorder {
-      0%   { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.6); }
-      70%  { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.6); }
+      70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
       100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
+
+    #connection-status {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-family: 'Times New Roman', serif;
+      background: #eee;
+      color: #000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
+      transition: 0.3s;
     }
   </style>
 
@@ -159,6 +173,8 @@
     <a href="history.html" class="card-tile">📈 View History Chart</a>
   </div>
 
+  <div id="connection-status">Checking status...</div>
+
   <button class="toggle" onclick="toggleDark()">🌙</button>
 
   <script>
@@ -168,41 +184,71 @@
       localStorage.dark = document.body.classList.contains('dark');
     }
 
-    // Firebase config
-    var firebaseConfig = {
+    const config = {
       apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
       authDomain: "beehive-d31e3.firebaseapp.com",
       databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "beehive-d31e3",
+      projectId: "beehive-d31e3"
     };
-    firebase.initializeApp(firebaseConfig);
-    var db = firebase.database();
+    firebase.initializeApp(config);
+    const db = firebase.database();
 
-    // Border pulse logic
     function updateCardBorder(el, value, min, max) {
-      el.classList.remove('pulse');
-      let color = "#2ecc71"; // green
+      el.classList.remove("pulse");
+      let color = "#2ecc71"; // green default
       if (value < min || value > max) {
-        color = "#e74c3c"; // red
-        el.classList.add('pulse');
+        color = "#e74c3c"; // red alert
+        el.classList.add("pulse");
       }
       el.style.borderColor = color;
     }
 
-    // Listen to Firebase
-    db.ref("beehive").on("value", function(snapshot) {
+    function formatTimeAgo(timestamp) {
+      const time = new Date(timestamp);
+      const now = new Date();
+      const diff = Math.floor((now - time) / 1000);
+      if (diff < 60) return `${diff}s ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return time.toLocaleString();
+    }
+
+    const statusEl = document.getElementById("connection-status");
+
+    db.ref("beehive").on("value", snapshot => {
       const data = snapshot.val() || {};
-      const temp = data.temperature ?? "--";
-      const hum = data.humidity ?? "--";
-      const air = data.air_quality ?? "--";
+      const temp = parseFloat(data.temperature ?? "--");
+      const hum  = parseFloat(data.humidity ?? "--");
+      const air  = parseFloat(data.air_quality ?? "--");
+      const lastTime = data.last_time ?? null;
 
-      document.getElementById("temp").innerText = temp;
-      document.getElementById("hum").innerText = hum;
-      document.getElementById("air").innerText = air;
+      document.getElementById("temp").innerText = isNaN(temp) ? "--" : temp;
+      document.getElementById("hum").innerText  = isNaN(hum)  ? "--" : hum;
+      document.getElementById("air").innerText  = isNaN(air)  ? "--" : air;
 
-      if (temp !== "--") updateCardBorder(document.getElementById("card-temp"), temp, 18, 30);
-      if (hum !== "--")  updateCardBorder(document.getElementById("card-hum"), hum, 70);
-      if (air !== "--")  updateCardBorder(document.getElementById("card-air"), air, 60, 100);
+      if (!isNaN(temp)) updateCardBorder(document.getElementById("card-temp"), temp, 18, 30);
+      if (!isNaN(hum))  updateCardBorder(document.getElementById("card-hum"), hum, 70);
+      if (!isNaN(air))  updateCardBorder(document.getElementById("card-air"), air, 60, 100);
+
+      // Device online/offline detection via last_time
+      if (lastTime) {
+        const last = new Date(lastTime);
+        const now = new Date();
+        const diffSec = (now - last) / 1000;
+        if (diffSec < 15) {
+          statusEl.textContent = "Device Online";
+          statusEl.style.background = "#d4edda";
+          statusEl.style.color = "#155724";
+        } else {
+          statusEl.textContent = `Offline – Last seen: ${formatTimeAgo(lastTime)}`;
+          statusEl.style.background = "#f8d7da";
+          statusEl.style.color = "#721c24";
+        }
+      } else {
+        statusEl.textContent = "Status Unknown";
+        statusEl.style.background = "#fef3cd";
+        statusEl.style.color = "#856404";
+      }
     });
   </script>
 </body>
