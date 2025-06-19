@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Beehive Monitor</title>
+
+  <!-- ✅ No Google Fonts loaded, uses system's Times New Roman -->
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -11,51 +14,121 @@
 
   <style>
     body {
-      margin:0; font-family:'Poppins'; padding:20px;
-      background: var(--bg); color: var(--fg);
+      margin: 0;
+      font-family: 'Times New Roman', Times, serif;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--fg);
     }
+
     :root {
-      --bg: #f9fbff; --fg: #333; --card: #fff; --buttonBg: #2d3e50; --buttonFg: #fff;
+      --bg: #f9fbff;
+      --fg: #333;
+      --card: #fff;
+      --buttonBg: #2d3e50;
+      --buttonFg: #fff;
     }
+
     .dark {
-      --bg: #2b2e3b; --fg: #ddd; --card: #3a3f4b; --buttonBg: #ddd; --buttonFg: #2d3e50;
+      --bg: #2b2e3b;
+      --fg: #ddd;
+      --card: #3a3f4b;
+      --buttonBg: #ddd;
+      --buttonFg: #2d3e50;
     }
+
     .header {
-      text-align:center; background:var(--buttonBg);
-      color:var(--buttonFg); padding:15px; border-radius:8px; margin-bottom:20px;
+      text-align: center;
+      background: var(--buttonBg);
+      color: var(--buttonFg);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      font-weight: bold;
     }
-    .chart-container { width:100%; overflow-x:auto; }
-    canvas { width:100%!important; height:auto!important; min-width:600px; }
+
+    .chart-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+      min-width: 600px;
+      font-family: 'Times New Roman', Times, serif !important;
+    }
+
     .buttons {
-      display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:10px 0;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 10px 0;
     }
+
     .buttons button {
-      background:var(--card); border:1px solid var(--buttonBg);
-      color:var(--buttonBg); padding:6px 12px; border-radius:8px;
-      font-weight:600; cursor:pointer; transition:.2s;
+      background: var(--card);
+      border: 1px solid var(--buttonBg);
+      color: var(--buttonBg);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'Times New Roman', Times, serif;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
     }
+
     .buttons button:hover {
-      background:var(--buttonBg); color:var(--buttonFg);
+      background: var(--buttonBg);
+      color: var(--buttonFg);
     }
+
     .nav {
-      display:flex; justify-content:center; margin-top:20px;
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
     }
+
     .card-tile {
-      background:var(--card); color:var(--buttonBg);
-      border-radius:16px; box-shadow:0 8px 16px rgba(0,0,0,.06);
-      padding:10px 25px; font-size:18px; font-weight:600;
-      text-decoration:none; transition:.2s; cursor:pointer;
+      background: var(--card);
+      color: var(--buttonBg);
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0,0,0,.06);
+      padding: 10px 25px;
+      font-size: 18px;
+      font-weight: bold;
+      font-family: 'Times New Roman', Times, serif;
+      text-decoration: none;
+      transition: 0.2s;
+      cursor: pointer;
     }
+
     .card-tile:hover {
-      transform:scale(1.05); box-shadow:0 12px 20px rgba(0,0,0,.08);
+      transform: scale(1.05);
+      box-shadow: 0 12px 20px rgba(0,0,0,.08);
     }
+
     .toggle {
-      position:fixed; bottom:20px; right:20px;
-      background:var(--buttonBg); color:var(--buttonFg);
-      border:none; padding:10px; border-radius:50%;
-      cursor:pointer; font-size:18px;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--buttonBg);
+      color: var(--buttonFg);
+      border: none;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-family: 'Times New Roman', Times, serif;
     }
-    @media(max-width:600px){ canvas{ height:60vh!important; } }
+
+    @media (max-width: 600px) {
+      canvas {
+        height: 60vh !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -80,7 +153,7 @@
   <button class="toggle" onclick="toggleDark()">🌙</button>
 
   <script>
-    // Init theme
+    // Theme toggle
     if (localStorage.dark === 'true') document.body.classList.add('dark');
 
     function toggleDark() {
@@ -88,7 +161,7 @@
       localStorage.dark = document.body.classList.contains('dark');
     }
 
-    // Firebase config
+    // Firebase
     const fb = {
       apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
       authDomain: "beehive-d31e3.firebaseapp.com",
@@ -107,50 +180,60 @@
       chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels, datasets: [
-            { label:'🌡 Temp', data:temps, borderColor:'#ff5733', fill:false, tension:0.3 },
-            { label:'💧 Hum', data:hums, borderColor:'#3399ff', fill:false, tension:0.3 }
+          labels,
+          datasets: [
+            { label: '🌡 Temp', data: temps, borderColor: '#ff5733', fill: false, tension: 0.3 },
+            { label: '💧 Hum', data: hums, borderColor: '#3399ff', fill: false, tension: 0.3 }
           ]
         },
         options: {
-          responsive:true,
-          plugins:{
-            legend:{position:'top'},
-            zoom:{
-              pan:{enabled:true,mode:'x'},
-              zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}
+          responsive: true,
+          plugins: {
+            legend: { position: 'top' },
+            zoom: {
+              pan: { enabled: true, mode: 'x' },
+              zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
             }
           },
-          scales:{
-            x:{
-              ticks:{ autoSkip:false, maxRotation:0, callback:(v,i)=>i%6===0?labels[i]:'' },
-              grid:{ color:ctx=>labels[ctx.tick.value].endsWith(':00')||labels[ctx.tick.value].endsWith(':30')?'#888':'transparent'}
+          scales: {
+            x: {
+              ticks: {
+                autoSkip: false,
+                maxRotation: 0,
+                callback: (v, i) => i % 6 === 0 ? labels[i] : ''
+              },
+              grid: {
+                color: ctx => labels[ctx.tick.value]?.endsWith(':00') || labels[ctx.tick.value]?.endsWith(':30') ? '#888' : 'transparent'
+              }
             },
-            y:{ beginAtZero:true, grid:{color:'#999'} }
+            y: {
+              beginAtZero: true,
+              grid: { color: '#999' }
+            }
           }
         }
       });
     }
 
     function loadData(range) {
-      db.ref('history').once('value').then(snap=>{
+      db.ref('history').once('value').then(snap => {
         const raw = snap.val() || {};
-        const labels=[], temps=[], hums=[];
+        const labels = [], temps = [], hums = [];
         const now = Date.now();
         const cutoffs = {
-          live: now - 30*60000,
-          '24h': now - 24*3600000,
-          '7d': now - 7*86400000,
-          '15d': now - 15*86400000,
-          '30d': now - 30*86400000
+          live: now - 30 * 60000,
+          '24h': now - 24 * 3600000,
+          '7d': now - 7 * 86400000,
+          '15d': now - 15 * 86400000,
+          '30d': now - 30 * 86400000
         };
         const cutoff = cutoffs[range];
 
-        Object.entries(raw).sort((a,b)=>a[0]>b[0]).forEach(([k,v])=>{
+        Object.entries(raw).sort(([a], [b]) => a > b ? 1 : -1).forEach(([k, v]) => {
           const t = new Date(k).getTime();
           if (t >= cutoff) {
             const d = new Date(k);
-            labels.push(d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0'));
+            labels.push(d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0'));
             temps.push(v.temperature);
             hums.push(v.humidity);
           }
@@ -160,6 +243,7 @@
       });
     }
 
+    // Initial load
     loadData('live');
   </script>
 </body>
