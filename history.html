@@ -4,220 +4,163 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Beehive Monitor</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <style>
     body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: #f9fbff;
-      color: #333;
-      padding: 20px;
+      margin:0; font-family:'Poppins'; padding:20px;
+      background: var(--bg); color: var(--fg);
     }
-
+    :root {
+      --bg: #f9fbff; --fg: #333; --card: #fff; --buttonBg: #2d3e50; --buttonFg: #fff;
+    }
+    .dark {
+      --bg: #2b2e3b; --fg: #ddd; --card: #3a3f4b; --buttonBg: #ddd; --buttonFg: #2d3e50;
+    }
     .header {
-      text-align: center;
-      background: #2d3e50;
-      color: white;
-      padding: 15px;
-      font-size: 22px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      text-align:center; background:var(--buttonBg);
+      color:var(--buttonFg); padding:15px; border-radius:8px; margin-bottom:20px;
     }
-
-    .chart-container {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    canvas {
-      width: 100% !important;
-      height: auto !important;
-      min-width: 600px;
-    }
-
+    .chart-container { width:100%; overflow-x:auto; }
+    canvas { width:100%!important; height:auto!important; min-width:600px; }
     .buttons {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 20px 0;
+      display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:10px 0;
     }
-
     .buttons button {
-      background: #fff;
-      border: 1px solid #2d3e50;
-      padding: 8px 16px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s ease;
+      background:var(--card); border:1px solid var(--buttonBg);
+      color:var(--buttonBg); padding:6px 12px; border-radius:8px;
+      font-weight:600; cursor:pointer; transition:.2s;
     }
-
     .buttons button:hover {
-      background: #2d3e50;
-      color: #fff;
+      background:var(--buttonBg); color:var(--buttonFg);
     }
-
     .nav {
-      display: flex;
-      justify-content: center;
-      margin-top: 30px;
+      display:flex; justify-content:center; margin-top:20px;
     }
-
     .card-tile {
-      display: inline-block;
-      background-color: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
-      padding: 10px 25px;
-      font-size: 20px;
-      font-weight: 600;
-      color: #2d3e50;
-      text-decoration: none;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      cursor: pointer;
+      background:var(--card); color:var(--buttonBg);
+      border-radius:16px; box-shadow:0 8px 16px rgba(0,0,0,.06);
+      padding:10px 25px; font-size:18px; font-weight:600;
+      text-decoration:none; transition:.2s; cursor:pointer;
     }
-
     .card-tile:hover {
-      transform: scale(1.05);
-      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+      transform:scale(1.05); box-shadow:0 12px 20px rgba(0,0,0,.08);
     }
-
-    @media (max-width: 600px) {
-      canvas {
-        height: 400px !important;
-      }
+    .toggle {
+      position:fixed; bottom:20px; right:20px;
+      background:var(--buttonBg); color:var(--buttonFg);
+      border:none; padding:10px; border-radius:50%;
+      cursor:pointer; font-size:18px;
     }
+    @media(max-width:600px){ canvas{ height:60vh!important; } }
   </style>
 </head>
 <body>
+  <div class="header">🐝 Beehive Temp & Humidity Monitor</div>
 
-<div class="header">📊 Beehive Temperature & Humidity Monitor</div>
+  <div class="buttons">
+    <button onclick="loadData('live')">Live</button>
+    <button onclick="loadData('24h')">24H</button>
+    <button onclick="loadData('7d')">7D</button>
+    <button onclick="loadData('15d')">15D</button>
+    <button onclick="loadData('30d')">30D</button>
+  </div>
 
-<div class="buttons">
-  <button onclick="loadData('live')">Live</button>
-  <button onclick="loadData('24h')">24H</button>
-  <button onclick="loadData('7d')">7D</button>
-  <button onclick="loadData('15d')">15D</button>
-  <button onclick="loadData('30d')">30D</button>
-</div>
+  <div class="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
 
-<div class="chart-container">
-  <canvas id="chart"></canvas>
-</div>
+  <div class="nav">
+    <a href="index.html" class="card-tile">Back to Home</a>
+  </div>
 
-<!-- Back to Home Button -->
-<div class="nav">
-  <a href="index.html" class="card-tile">Back to Home</a>
-</div>
+  <button class="toggle" onclick="toggleDark()">🌙</button>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
-    authDomain: "beehive-d31e3.firebaseapp.com",
-    databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "beehive-d31e3",
-    storageBucket: "beehive-d31e3.appspot.com",
-    messagingSenderId: "replace",
-    appId: "replace"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  <script>
+    // Init theme
+    if (localStorage.dark === 'true') document.body.classList.add('dark');
 
-  let chart;
+    function toggleDark() {
+      document.body.classList.toggle('dark');
+      localStorage.dark = document.body.classList.contains('dark');
+    }
 
-  function createChart(labels, tempData, humData) {
-    if (chart) chart.destroy();
+    // Firebase config
+    const fb = {
+      apiKey: "AIzaSyD4M_ZOMqR9MtSkbgH2SQQvj2QSAFKLOhU",
+      authDomain: "beehive-d31e3.firebaseapp.com",
+      databaseURL: "https://beehive-d31e3-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "beehive-d31e3",
+    };
+    firebase.initializeApp(fb);
+    const db = firebase.database();
+
+    let chart;
     const ctx = document.getElementById('chart').getContext('2d');
-    chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          {
-            label: '🌡 Temp (°C)',
-            data: tempData,
-            borderColor: '#ff5733',
-            backgroundColor: 'rgba(255,87,51,0.1)',
-            fill: true,
-            tension: 0.3
-          },
-          {
-            label: '💧 Humidity (%)',
-            data: humData,
-            borderColor: '#3399ff',
-            backgroundColor: 'rgba(51,153,255,0.1)',
-            fill: true,
-            tension: 0.3
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            ticks: {
-              autoSkip: false,
-              maxRotation: 0,
-              callback: function(value, index, ticks) {
-                return index % 6 === 0 ? this.getLabelForValue(value) : '';
-              }
-            },
-            grid: {
-              color: (ctx) => {
-                const label = chart.data.labels[ctx.tick.value];
-                return label && (label.endsWith(":00") || label.endsWith(":30")) ? "#ccc" : "transparent";
-              }
+
+    function createChart(labels, temps, hums) {
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels, datasets: [
+            { label:'🌡 Temp', data:temps, borderColor:'#ff5733', fill:false, tension:0.3 },
+            { label:'💧 Hum', data:hums, borderColor:'#3399ff', fill:false, tension:0.3 }
+          ]
+        },
+        options: {
+          responsive:true,
+          plugins:{
+            legend:{position:'top'},
+            zoom:{
+              pan:{enabled:true,mode:'x'},
+              zoom:{wheel:{enabled:true}, pinch:{enabled:true}, mode:'x'}
             }
           },
-          y: {
-            beginAtZero: true,
-            grid: { color: '#eee' }
+          scales:{
+            x:{
+              ticks:{ autoSkip:false, maxRotation:0, callback:(v,i)=>i%6===0?labels[i]:'' },
+              grid:{ color:ctx=>labels[ctx.tick.value].endsWith(':00')||labels[ctx.tick.value].endsWith(':30')?'#888':'transparent'}
+            },
+            y:{ beginAtZero:true, grid:{color:'#999'} }
           }
-        },
-        plugins: {
-          legend: { position: 'top' }
-        }
-      }
-    });
-  }
-
-  function loadData(range) {
-    db.ref("history").once("value").then(snapshot => {
-      const allData = snapshot.val() || {};
-      const labels = [];
-      const temps = [];
-      const hums = [];
-
-      const now = new Date();
-      let startTime = new Date();
-
-      switch(range) {
-        case 'live': startTime.setMinutes(now.getMinutes() - 30); break;
-        case '24h': startTime.setHours(now.getHours() - 24); break;
-        case '7d': startTime.setDate(now.getDate() - 7); break;
-        case '15d': startTime.setDate(now.getDate() - 15); break;
-        case '30d': startTime.setDate(now.getDate() - 30); break;
-      }
-
-      Object.keys(allData).sort().forEach(key => {
-        const entryDate = new Date(key);
-        if (entryDate >= startTime) {
-          const timeStr = entryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          labels.push(timeStr);
-          temps.push(allData[key].temperature);
-          hums.push(allData[key].humidity);
         }
       });
+    }
 
-      createChart(labels, temps, hums);
-    });
-  }
+    function loadData(range) {
+      db.ref('history').once('value').then(snap=>{
+        const raw = snap.val() || {};
+        const labels=[], temps=[], hums=[];
+        const now = Date.now();
+        const cutoffs = {
+          live: now - 30*60000,
+          '24h': now - 24*3600000,
+          '7d': now - 7*86400000,
+          '15d': now - 15*86400000,
+          '30d': now - 30*86400000
+        };
+        const cutoff = cutoffs[range];
 
-  // Default view
-  loadData('live');
-</script>
+        Object.entries(raw).sort((a,b)=>a[0]>b[0]).forEach(([k,v])=>{
+          const t = new Date(k).getTime();
+          if (t >= cutoff) {
+            const d = new Date(k);
+            labels.push(d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0'));
+            temps.push(v.temperature);
+            hums.push(v.humidity);
+          }
+        });
+
+        createChart(labels, temps, hums);
+      });
+    }
+
+    loadData('live');
+  </script>
 </body>
 </html>
