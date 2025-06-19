@@ -6,33 +6,26 @@
   <title>Beehive Monitor</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>
+    :root {
+      --bg: #f9fbff; --fg: #333;
+      --card: #fff; --buttonBg: #2d3e50; --buttonFg: #fff;
+    }
+    .dark {
+      --bg: #2b2e3b; --fg: #ddd;
+      --card: #3a3f4b; --buttonBg: #ddd; --buttonFg: #2d3e50;
+    }
+
     body {
       margin: 0;
-      font-family: 'Times New Roman', Times, serif;
       padding: 20px;
+      font-family: 'Times New Roman', Times, serif;
       background: var(--bg);
       color: var(--fg);
-    }
-
-    :root {
-      --bg: #f9fbff;
-      --fg: #333;
-      --card: #fff;
-      --buttonBg: #2d3e50;
-      --buttonFg: #fff;
-    }
-
-    .dark {
-      --bg: #2b2e3b;
-      --fg: #ddd;
-      --card: #3a3f4b;
-      --buttonBg: #ddd;
-      --buttonFg: #2d3e50;
     }
 
     .header {
@@ -40,10 +33,35 @@
       background: var(--buttonBg);
       color: var(--buttonFg);
       padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
       font-size: 24px;
       font-weight: bold;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .buttons button {
+      padding: 8px 16px;
+      border: 1px solid var(--buttonBg);
+      background: var(--card);
+      color: var(--buttonBg);
+      font-weight: bold;
+      font-family: 'Times New Roman', Times, serif;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .buttons button:hover {
+      background: var(--buttonBg);
+      color: var(--buttonFg);
     }
 
     .chart-container {
@@ -57,31 +75,6 @@
       min-width: 600px;
     }
 
-    .buttons {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 10px 0;
-    }
-
-    .buttons button {
-      background: var(--card);
-      border: 1px solid var(--buttonBg);
-      color: var(--buttonBg);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-family: 'Times New Roman', Times, serif;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .buttons button:hover {
-      background: var(--buttonBg);
-      color: var(--buttonFg);
-    }
-
     .nav {
       display: flex;
       justify-content: center;
@@ -89,22 +82,21 @@
     }
 
     .card-tile {
+      text-decoration: none;
       background: var(--card);
       color: var(--buttonBg);
-      border-radius: 16px;
-      box-shadow: 0 8px 16px rgba(0,0,0,.06);
       padding: 10px 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
       font-size: 18px;
       font-weight: bold;
       font-family: 'Times New Roman', Times, serif;
-      text-decoration: none;
       transition: 0.2s;
-      cursor: pointer;
     }
 
     .card-tile:hover {
       transform: scale(1.05);
-      box-shadow: 0 12px 20px rgba(0,0,0,.08);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
     }
 
     .toggle {
@@ -116,9 +108,16 @@
       border: none;
       padding: 10px;
       border-radius: 50%;
-      cursor: pointer;
       font-size: 18px;
-      font-family: 'Times New Roman', Times, serif;
+      cursor: pointer;
+    }
+
+    #loader {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      font-style: italic;
     }
 
     @media (max-width: 600px) {
@@ -129,6 +128,7 @@
   </style>
 </head>
 <body>
+
   <div class="header">🐝 Beehive Temp & Humidity Monitor</div>
 
   <div class="buttons">
@@ -141,6 +141,7 @@
 
   <div class="chart-container">
     <canvas id="chart"></canvas>
+    <div id="loader">Loading chart...</div>
   </div>
 
   <div class="nav">
@@ -168,7 +169,7 @@
     let chart;
     const ctx = document.getElementById('chart').getContext('2d');
 
-    function createChart(labels, temps, hums) {
+    function createChart(labels, temps, hums, fullLabels) {
       if (chart) chart.destroy();
 
       chart = new Chart(ctx, {
@@ -176,14 +177,19 @@
         data: {
           labels,
           datasets: [
-            { label: '🌡 Temp', data: temps, borderColor: '#ff5733', fill: false, tension: 0.3 },
-            { label: '💧 Hum', data: hums, borderColor: '#3399ff', fill: false, tension: 0.3 }
+            { label: '🌡 Temp (°C)', data: temps, borderColor: '#ff5733', fill: false, tension: 0.3 },
+            { label: '💧 Humidity (%)', data: hums, borderColor: '#3399ff', fill: false, tension: 0.3 }
           ]
         },
         options: {
           responsive: true,
           plugins: {
             legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                title: (items) => fullLabels[items[0].dataIndex] || items[0].label
+              }
+            },
             zoom: {
               pan: { enabled: true, mode: 'x' },
               zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
@@ -194,10 +200,15 @@
               ticks: {
                 autoSkip: false,
                 maxRotation: 0,
-                callback: (v, i) => i % 6 === 0 ? labels[i] : ''
+                callback: function(val, i) {
+                  return this.getLabelForValue(val) || '';
+                }
               },
               grid: {
-                color: ctx => labels[ctx.tick.value]?.endsWith(':00') || labels[ctx.tick.value]?.endsWith(':30') ? '#888' : 'transparent'
+                color: (ctx) => {
+                  const label = chart.data.labels[ctx.tick.value];
+                  return label?.endsWith(':00') || label?.endsWith(':30') ? '#888' : 'transparent';
+                }
               }
             },
             y: {
@@ -210,39 +221,60 @@
     }
 
     function loadData(range) {
+      document.getElementById('loader').style.display = 'block';
+
       db.ref('history').once('value').then(snap => {
         const raw = snap.val() || {};
-        const labels = [], temps = [], hums = [];
-
+        const labels = [], temps = [], hums = [], fullLabels = [];
         const now = new Date();
         const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
         const cutoffs = {
-          live: now.getTime() - 30 * 60 * 1000, // last 30 mins
+          live: now.getTime() - 30 * 60000,
           '24h': midnight,
           '7d': now.getTime() - 7 * 86400000,
           '15d': now.getTime() - 15 * 86400000,
           '30d': now.getTime() - 30 * 86400000
         };
         const cutoff = cutoffs[range];
+        const shownDates = new Set();
 
         Object.entries(raw).sort(([a], [b]) => a.localeCompare(b)).forEach(([k, v]) => {
-          const t = new Date(k).getTime();
+          const d = new Date(k);
+          const t = d.getTime();
           if (t >= cutoff) {
-            const d = new Date(k);
-            labels.push(
-              d.getHours().toString().padStart(2, '0') + ':' +
-              d.getMinutes().toString().padStart(2, '0')
-            );
+            const hour = d.getHours().toString().padStart(2, '0');
+            const min = d.getMinutes().toString().padStart(2, '0');
+            const time = `${hour}:${min}`;
+            const date = `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}`;
+            const full = `${date} ${time}`;
+            let label = '';
+
+            if (range === 'live') {
+              if (min === '00' || min === '30') label = time;
+            } else if (range === '24h') {
+              if (min === '00') label = time;
+            } else {
+              if (!shownDates.has(date)) {
+                label = date;
+                shownDates.add(date);
+              }
+            }
+
+            labels.push(label);
             temps.push(v.temperature);
             hums.push(v.humidity);
+            fullLabels.push(full);
           }
         });
 
-        createChart(labels, temps, hums);
+        createChart(labels, temps, hums, fullLabels);
+        document.getElementById('loader').style.display = 'none';
       });
     }
 
     loadData('live');
   </script>
+
 </body>
 </html>
